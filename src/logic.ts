@@ -75,12 +75,17 @@ export const deleteList = (req: Request, res: Response): Response => {
 };
 //------------------------------------------------------------------------------------
 export const deleteItem = (req: Request, res: Response): Response => {
-  const indexOfItem = dataList.map((list) => {
+  dataList.forEach((list) => {
     if (list.id === req.params.idList) {
-      return list;
+      list.data.forEach((item) => {
+        if (item.id === req.params.idItem) {
+          const indexOfItem = list.data.findIndex(
+            (item) => item.id === req.params.idItem
+          );
+          list.data.splice(indexOfItem, 1);
+        }
+      });
     }
-    return list;
   });
-  console.log(indexOfItem);
-  return res.json(indexOfItem);
+  return res.json("Hello");
 };
