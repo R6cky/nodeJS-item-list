@@ -4,6 +4,7 @@ import {
   iItemDataWithId,
   iListRequest,
   iListResponse,
+  tItemDataUpdate,
 } from "./interfaces";
 //import { v4 as uuid } from "uuid";
 import { dataList } from "./database";
@@ -11,6 +12,16 @@ import { dataList } from "./database";
 export const createList = (req: Request, res: Response): Response => {
   const dataRequest: iListRequest = req.body;
   const item = req.body.data;
+
+  const findName: iListResponse | undefined = dataList.find((list) => {
+    return list.listName === req.body.listName;
+  });
+
+  if (findName) {
+    const error = "List name already exist";
+    return res.status(409).json({ error });
+  }
+
   const newItem = item.map((elem: iItemData) => {
     const newItemWithId: iItemDataWithId = {
       ...elem,
@@ -18,7 +29,6 @@ export const createList = (req: Request, res: Response): Response => {
     };
     return newItemWithId;
   });
-  //------------------------------------------------------------------------------------
   const newData: iListResponse = {
     ...dataRequest,
     data: newItem,
@@ -36,14 +46,18 @@ export const showList = (req: Request, res: Response): Response => {
 //------------------------------------------------------------------------------------
 export const showUniqueList = (req: Request, res: Response): Response => {
   const listId: string = req.params.id;
-  const filterId: Array<iListResponse> = dataList.filter((item) => {
+  const filterId: iListResponse | undefined = dataList.find((item) => {
     return item.id === listId;
   });
-  return res.status(200).json(filterId);
+  if (!filterId) {
+    const errorMessage: string = "List Not found";
+    return res.status(404).json({ errorMessage });
+  }
+  return res.status(200).json([filterId]);
 };
 //------------------------------------------------------------------------------------
 export const updateItemList = (req: Request, res: Response): Response => {
-  const newItem: iItemData = req.body;
+  const newItem: tItemDataUpdate = req.body;
   const listId: string = req.params.idList;
   const itemId: string = req.params.idItem;
 
@@ -51,6 +65,11 @@ export const updateItemList = (req: Request, res: Response): Response => {
     if (list.id === listId) {
       const itemModified = list.data.map(
         (item: iItemDataWithId): iItemDataWithId | string => {
+          if (item.name) {
+            if (item.name === newItem.name) {
+              res.status(409).json({ message: "Item name already exist" });
+            }
+          }
           if (item.id === itemId) {
             item.name = newItem.name;
             item.quantity = newItem.quantity;
@@ -63,29 +82,54 @@ export const updateItemList = (req: Request, res: Response): Response => {
       return "Lista inexistente";
     }
   });
-  return res.status(200).json(newList[0]);
+  return res.status(200).json(newList);
 };
 //------------------------------------------------------------------------------------
 export const deleteList = (req: Request, res: Response): Response => {
-  const indexOfList = dataList.findIndex((list) => {
+  const listId = req.params.idList;
+
+  const findList: iListResponse | undefined = dataList.find(
+    (list: iListResponse) => {
+      return list.id === listId;
+    }
+  );
+
+  if (!findList) {
+    const error = "List Not found";
+    return res.status(404).json({ error });
+  }
+
+  const indexOfList: number = dataList.findIndex((list: iListResponse) => {
     return list.id === req.params.idList;
   });
   dataList.splice(indexOfList, 1);
-  return res.status(200).send("Hello");
+  return res.status(200).send();
 };
 //------------------------------------------------------------------------------------
 export const deleteItem = (req: Request, res: Response): Response => {
-  dataList.forEach((list) => {
-    if (list.id === req.params.idList) {
-      list.data.forEach((item) => {
-        if (item.id === req.params.idItem) {
-          const indexOfItem = list.data.findIndex(
-            (item) => item.id === req.params.idItem
-          );
-          list.data.splice(indexOfItem, 1);
-        }
-      });
-    }
+  const listId = req.params.idList;
+  const itemId = req.params.idItem;
+
+  const findList: iListResponse | undefined = dataList.find((list) => {
+    return list.id === listId;
   });
-  return res.json("Hello");
+
+  if (!findList) {
+    const error = "List Not found";
+    return res.status(404).json({ error });
+  }
+
+  const findItem: iItemDataWithId | undefined = findList.data.find((item) => {
+    return item.id === itemId;
+  });
+
+  if (!findItem) {
+    return res.status(404).json({ message: "Item Not Found" });
+  }
+  const indexOfItem: number = findList.data.findIndex(
+    (item) => item.id === req.params.idItem
+  );
+  findList.data.splice(indexOfItem, 1);
+
+  return res.status(200).send();
 };
