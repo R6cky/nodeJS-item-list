@@ -4,7 +4,6 @@ import {
   iItemDataWithId,
   iListRequest,
   iListResponse,
-  tItemDataUpdate,
 } from "./interfaces";
 //import { v4 as uuid } from "uuid";
 import { dataList } from "./database";
@@ -57,32 +56,47 @@ export const showUniqueList = (req: Request, res: Response): Response => {
 };
 //------------------------------------------------------------------------------------
 export const updateItemList = (req: Request, res: Response): Response => {
-  const newItem: tItemDataUpdate = req.body;
+  const newItem: iItemData = req.body;
   const listId: string = req.params.idList;
   const itemId: string = req.params.idItem;
 
-  const newList = dataList.map((list: iListResponse) => {
+  const listExists = dataList.find((list) => {
+    return list.id === req.params.idList;
+  });
+
+  if (!listExists) {
+    const error = "List not found";
+    return res.status(404).json({ error });
+  }
+
+  const newListItem = dataList.map((list) => {
+    const findItem = list.data.find((item) => {
+      return item.id === req.params.idItem;
+    });
+    if (!findItem) {
+      const error = "Item not found";
+      return res.status(404).json({ error });
+    }
+
+    if (findItem.name === newItem.name) {
+      return res.status(409).json({ message: "Item name already exist" });
+    }
     if (list.id === listId) {
-      const itemModified = list.data.map(
-        (item: iItemDataWithId): iItemDataWithId | string => {
-          if (item.name) {
-            if (item.name === newItem.name) {
-              res.status(409).json({ message: "Item name already exist" });
-            }
-          }
-          if (item.id === itemId) {
-            item.name = newItem.name;
-            item.quantity = newItem.quantity;
-          }
-          return item;
+      const itemModified = list.data.map((item): iItemDataWithId => {
+        // if(item.name === req.params.name){
+
+        // }
+        if (item.id === itemId) {
+          item.name = newItem.name;
+          item.quantity = newItem.quantity;
         }
-      );
+        return item;
+      });
       return itemModified;
-    } else {
-      return "Lista inexistente";
     }
   });
-  return res.status(200).json(newList);
+
+  return res.status(200).json(newListItem[0]);
 };
 //------------------------------------------------------------------------------------
 export const deleteList = (req: Request, res: Response): Response => {

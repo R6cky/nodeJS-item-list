@@ -14,8 +14,6 @@ export interface iItemData {
   quantity: string;
 }
 
-export type tItemDataUpdate = Partial<iItemData>;
-
 export interface iItemDataWithId extends iItemData {
   id: string;
 }
