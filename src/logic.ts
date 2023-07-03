@@ -69,8 +69,8 @@ export const updateItemList = (req: Request, res: Response): Response => {
     return res.status(404).json({ error });
   }
 
-  const newListItem = dataList.map((list) => {
-    const findItem = list.data.find((item) => {
+  const newListItem = dataList.map((list: iListResponse) => {
+    const findItem = list.data.find((item: iItemDataWithId) => {
       return item.id === req.params.idItem;
     });
     if (!findItem) {
@@ -78,14 +78,15 @@ export const updateItemList = (req: Request, res: Response): Response => {
       return res.status(404).json({ error });
     }
 
-    if (findItem.name === newItem.name) {
+    const findItemName = list.data.find((item) => {
+      return item.name === req.body.name;
+    });
+    if (findItemName) {
       return res.status(409).json({ message: "Item name already exist" });
     }
+
     if (list.id === listId) {
       const itemModified = list.data.map((item): iItemDataWithId => {
-        // if(item.name === req.params.name){
-
-        // }
         if (item.id === itemId) {
           item.name = newItem.name;
           item.quantity = newItem.quantity;
