@@ -77,7 +77,7 @@ export const updateItemList = (req: Request, res: Response): Response => {
       const error = "Item not found";
       return res.status(404).json({ error });
     }
-
+    
     const findItemName = list.data.find((item) => {
       return item.name === req.body.name;
     });
