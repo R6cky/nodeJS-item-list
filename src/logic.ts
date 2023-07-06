@@ -10,7 +10,34 @@ import { dataList } from "./database";
 //------------------------------------------------------------------------------------
 export const createList = (req: Request, res: Response): Response => {
   const dataRequest: iListRequest = req.body;
-  const item = req.body.data;
+  const keysOfRequest = Object.keys(dataRequest);
+  const valuesOfRequest = Object.values(dataRequest);
+  const itemsRequest = req.body.data;
+
+  itemsRequest.forEach((item: any) => {
+    const itemKeys: Array<string> = Object.keys(item);
+    const valueKeys: Array<string> = Object.values(item);
+    const itemValidating = ["name", "quantity"];
+    const itemKeysValid = itemValidating.every((key) => {
+      return itemKeys.includes(key);
+    });
+    if (!(itemKeysValid && itemKeys.length === itemValidating.length)) {
+      return res
+        .status(400)
+        .json({ message: `Keys required: ${itemValidating}` });
+    }
+
+    if (
+      !(typeof valueKeys[0] === "string" && typeof valueKeys[1] === "string")
+    ) {
+      return res
+        .status(400)
+        .json({ message: `Values of ${itemKeys} Must be a string` });
+    }
+  });
+
+  //call function of validate data of list create
+  validateDataOfListCreate(dataRequest, res);
 
   const findName: iListResponse | undefined = dataList.find((list) => {
     return list.listName === req.body.listName;
@@ -21,7 +48,7 @@ export const createList = (req: Request, res: Response): Response => {
     return res.status(409).json({ error });
   }
 
-  const newItem = item.map((elem: iItemData) => {
+  const newItem = itemsRequest.map((elem: iItemData) => {
     const newItemWithId: iItemDataWithId = {
       ...elem,
       id: (Math.random() * 10).toFixed(0).toString(),
@@ -77,7 +104,7 @@ export const updateItemList = (req: Request, res: Response): Response => {
       const error = "Item not found";
       return res.status(404).json({ error });
     }
-    
+
     const findItemName = list.data.find((item) => {
       return item.name === req.body.name;
     });
@@ -147,4 +174,70 @@ export const deleteItem = (req: Request, res: Response): Response => {
   findList.data.splice(indexOfItem, 1);
 
   return res.status(200).send();
+};
+//---------------------------------------------------------------------------------------------
+//Data validation functions
+
+const validateDataOfListCreate = (payload: any, res: Response) => {
+  const keysOfRequest = Object.keys(payload);
+  const valuesOfRequest = Object.values(payload);
+  const dataRequest = payload.data;
+  const listValidating = ["listName", "data"];
+
+  const isIncludesInKeys = keysOfRequest.every((key) => {
+    return listValidating.includes(key);
+  });
+
+  if (!(isIncludesInKeys && keysOfRequest.length === listValidating.length)) {
+    return res
+      .status(400)
+      .json({ message: `Keys required: ${listValidating}` });
+  }
+
+  if (!(typeof valuesOfRequest[0] === "string")) {
+    return res.status(400).json({
+      message: `The data format is not valid. ${keysOfRequest[0]} Must be a string`,
+    });
+  }
+
+  if (!(typeof valuesOfRequest[1] === "object")) {
+    return res.status(400).json({
+      message: `The data format is not valid. ${keysOfRequest[1]} Must be a array list`,
+    });
+  }
+
+  if (dataRequest.length === 0) {
+    return res.status(400).json({
+      message: `${keysOfRequest[1]}  cannot be empty`,
+    });
+  }
+};
+
+const validateDataOfItemListCreate = (payload: any, res: Response) => {
+  const keysOfRequest = Object.keys(payload);
+  const valuesOfRequest = Object.values(payload);
+  const listValidating = ["name", "quantity"];
+  const dataItemList: any = payload.data;
+  console.log(dataItemList);
+  const isIncludesInKeys = keysOfRequest.every((key) => {
+    return listValidating.includes(key);
+  });
+
+  if (!(isIncludesInKeys && keysOfRequest.length === listValidating.length)) {
+    return res
+      .status(400)
+      .json({ message: `Keys required: ${listValidating}` });
+  }
+
+  if (!(typeof valuesOfRequest[0] === "string")) {
+    return res.status(400).json({
+      message: `The data format is not valid. ${keysOfRequest[0]} Must be a string`,
+    });
+  }
+
+  if (!(typeof valuesOfRequest[1] === "object")) {
+    return res.status(400).json({
+      message: `The data format is not valid. ${keysOfRequest[1]} Must be a array list`,
+    });
+  }
 };
