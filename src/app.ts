@@ -1,4 +1,6 @@
 import express, { Application } from "express";
+import cors from "cors";
+
 import {
   createList,
   deleteItem,
@@ -13,8 +15,9 @@ import {
 } from "./middlewares";
 const app: Application = express();
 
-const port: number = 3000;
+const port: number = 2000;
 app.use(express.json());
+app.use(cors());
 
 app.post(
   "/purchaseList",
@@ -29,5 +32,5 @@ app.delete("/purchaseList/:idList", deleteList);
 app.delete("/purchaseList/:idList/:idItem", deleteItem);
 
 app.listen(port, () => {
-  console.log("Server running on port 3000");
+  console.log("Server running on port 2000");
 });
