@@ -59,26 +59,27 @@ export const middlewareValidateDataOfItemListCreate = (
 ) => {
   const itemValidating = ["name", "quantity"];
 
-  req.body.data.map((item: any) => {
+  for (const item of req.body.data) {
     const itemKeys: Array<string> = Object.keys(item);
     const valueKeys: Array<string> = Object.values(item);
 
     const itemKeysValid = itemValidating.every((key) => {
       return itemKeys.includes(key);
     });
+
     if (!(itemKeysValid && itemKeys.length === itemValidating.length)) {
       return res
         .status(400)
         .json({ message: `Keys required: ${itemValidating}` });
     }
 
-    if (
-      !(typeof valueKeys[0] === "string" && typeof valueKeys[1] === "string")
-    ) {
+    if (!(typeof valueKeys[0] === "string" && typeof valueKeys[1] === "string")) {
       return res
         .status(400)
-        .json({ message: `Values of ${itemKeys} Must be a string` });
+        .json({ message: `Values of ${itemKeys} must be a string` });
     }
-  });
+  }
+  
   return next();
 };
+
