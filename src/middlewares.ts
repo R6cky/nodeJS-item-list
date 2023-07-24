@@ -58,11 +58,12 @@ export const middlewareValidateDataOfItemListCreate = (
   next: NextFunction
 ) => {
   const itemValidating = ["name", "quantity"];
+  const arrItemsName: Array<any> = [];
 
   for (const item of req.body.data) {
     const itemKeys: Array<string> = Object.keys(item);
     const valueKeys: Array<string> = Object.values(item);
-
+    arrItemsName.push(item.name);
     const itemKeysValid = itemValidating.every((key) => {
       return itemKeys.includes(key);
     });
@@ -73,13 +74,17 @@ export const middlewareValidateDataOfItemListCreate = (
         .json({ message: `Keys required: ${itemValidating}` });
     }
 
-    if (!(typeof valueKeys[0] === "string" && typeof valueKeys[1] === "string")) {
+    if (
+      !(typeof valueKeys[0] === "string" && typeof valueKeys[1] === "string")
+    ) {
       return res
         .status(400)
         .json({ message: `Values of ${itemKeys} must be a string` });
     }
   }
-  
+
+  if (new Set(arrItemsName).size !== arrItemsName.length) {
+    return res.status(409).json({ message: "Item names must be different" });
+  }
   return next();
 };
-
